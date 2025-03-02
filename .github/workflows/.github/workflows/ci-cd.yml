@@ -1,0 +1,64 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Configurar Java e Maven
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: maven
+
+      - name: Build do projeto
+        run: mvn clean package -DskipTests
+
+      - name: Rodar Testes Automatizados
+        run: mvn test
+
+      - name: Login no DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Construir e publicar imagem Docker
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/pedidos-api .
+          docker tag ${{ secrets.DOCKER_USERNAME }}/pedidos-api:latest ${{ secrets.DOCKER_USERNAME }}/pedidos-api:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/pedidos-api:latest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Configurar credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          region: us-east-1
+
+      - name: Fazer Deploy na AWS Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name pedidos-api \
+            --image-uri ${{ secrets.DOCKER_USERNAME }}/pedidos-api:latest \
+            --publish
