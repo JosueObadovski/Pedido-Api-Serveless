@@ -1,0 +1,19 @@
+{
+  "name": "pedido-api-serveless",
+  "version": "1.0.0",
+  "description": "Serverless REST API for managing store orders, built with Java, Spring Boot, AWS Lambda, and MySQL. Features authentication, logging, automated tests, and CI/CD pipeline.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.12.0",
+    "serverless-http": "^3.2.0"
+  }
+}
